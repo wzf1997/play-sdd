@@ -1,0 +1,14 @@
+{
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true
+  },
+  "hide-files.files": [],
+  // 免权限确认总开关，必须开启
+  "claudeCode.allowDangerouslySkipPermissions": true,
+  // 新会话默认权限模式，设为bypassPermissions实现全自动
+  "claudeCode.initialPermissionMode": "bypassPermissions"
+}

@@ -1,0 +1,115 @@
+<h2>核心技术实现</h2>
+<p class="subtitle">useCardPhysics + ScratchCanvas 两个核心模块</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+
+  <!-- Physics Engine -->
+  <div style="background:#1e293b;border-radius:10px;padding:16px;border:1px solid #334155;">
+    <div style="color:#8b5cf6;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">useCardPhysics.ts</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="background:#0f172a;border-radius:6px;padding:10px;">
+        <div style="color:#c4b5fd;font-size:12px;font-weight:600;margin-bottom:4px;">每张卡的物理状态</div>
+        <div style="color:#64748b;font-size:11px;line-height:1.6;">
+          x, y — 当前位置<br>
+          vx, vy — 速度<br>
+          rotation — 旋转角度<br>
+          targetX, targetY — 目标位置
+        </div>
+      </div>
+
+      <div style="background:#0f172a;border-radius:6px;padding:10px;">
+        <div style="color:#c4b5fd;font-size:12px;font-weight:600;margin-bottom:4px;">每帧更新（rAF）</div>
+        <div style="color:#64748b;font-size:11px;line-height:1.6;">
+          弹簧力 = (target - pos) × stiffness<br>
+          摩擦力 = velocity × -damping<br>
+          velocity += (spring + friction) × dt<br>
+          position += velocity × dt
+        </div>
+      </div>
+
+      <div style="background:#0f172a;border-radius:6px;padding:10px;">
+        <div style="color:#c4b5fd;font-size:12px;font-weight:600;margin-bottom:4px;">阶段切换</div>
+        <div style="color:#64748b;font-size:11px;line-height:1.6;">
+          GATHERING：target = 屏幕中心<br>
+          SPREADING：target = 九宫格格子位置<br>
+          全部到达后回调 onPhaseComplete()
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Canvas Scratch -->
+  <div style="background:#1e293b;border-radius:10px;padding:16px;border:1px solid #334155;">
+    <div style="color:#0ea5e9;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">ScratchCanvas.tsx</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="background:#0f172a;border-radius:6px;padding:10px;">
+        <div style="color:#7dd3fc;font-size:12px;font-weight:600;margin-bottom:4px;">Canvas 层叠结构</div>
+        <div style="color:#64748b;font-size:11px;line-height:1.6;">
+          底层：奖品图片（img 标签）<br>
+          顶层：Canvas（灰色遮罩）<br>
+          刮涂：globalCompositeOp = destination-out
+        </div>
+      </div>
+
+      <div style="background:#0f172a;border-radius:6px;padding:10px;">
+        <div style="color:#7dd3fc;font-size:12px;font-weight:600;margin-bottom:4px;">事件处理</div>
+        <div style="color:#64748b;font-size:11px;line-height:1.6;">
+          统一处理 mouse + touch 事件<br>
+          getBoundingClientRect 坐标转换<br>
+          arc() 画圆擦除，radius = 20px
+        </div>
+      </div>
+
+      <div style="background:#0f172a;border-radius:6px;padding:10px;">
+        <div style="color:#7dd3fc;font-size:12px;font-weight:600;margin-bottom:4px;">完成检测</div>
+        <div style="color:#64748b;font-size:11px;line-height:1.6;">
+          每 200ms 采样 getImageData<br>
+          透明像素 / 总像素 ≥ 65%<br>
+          → onComplete() 触发 play 请求
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DB Schema -->
+<div style="background:#1e293b;border-radius:10px;padding:16px;border:1px solid #334155;margin-top:16px;">
+  <div style="color:#f59e0b;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">新增 DB 表：scratch_sessions</div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+    <div style="background:#0f172a;border-radius:6px;padding:8px;text-align:center;">
+      <div style="color:#fbbf24;font-size:12px;font-weight:600;">id</div>
+      <div style="color:#475569;font-size:11px;">TEXT PK</div>
+    </div>
+    <div style="background:#0f172a;border-radius:6px;padding:8px;text-align:center;">
+      <div style="color:#fbbf24;font-size:12px;font-weight:600;">campaign_id</div>
+      <div style="color:#475569;font-size:11px;">TEXT FK</div>
+    </div>
+    <div style="background:#0f172a;border-radius:6px;padding:8px;text-align:center;">
+      <div style="color:#fbbf24;font-size:12px;font-weight:600;">prize_id</div>
+      <div style="color:#475569;font-size:11px;">TEXT（init 时决定）</div>
+    </div>
+    <div style="background:#0f172a;border-radius:6px;padding:8px;text-align:center;">
+      <div style="color:#fbbf24;font-size:12px;font-weight:600;">expire_at</div>
+      <div style="color:#475569;font-size:11px;">INTEGER（+24h）</div>
+    </div>
+    <div style="background:#0f172a;border-radius:6px;padding:8px;text-align:center;">
+      <div style="color:#fbbf24;font-size:12px;font-weight:600;">played_at</div>
+      <div style="color:#475569;font-size:11px;">INTEGER nullable</div>
+    </div>
+    <div style="background:#0f172a;border-radius:6px;padding:8px;text-align:center;">
+      <div style="color:#fbbf24;font-size:12px;font-weight:600;">card_index</div>
+      <div style="color:#475569;font-size:11px;">INTEGER（选了第几张）</div>
+    </div>
+    <div style="background:#0f172a;border-radius:6px;padding:8px;text-align:center;">
+      <div style="color:#fbbf24;font-size:12px;font-weight:600;">user_id</div>
+      <div style="color:#475569;font-size:11px;">TEXT</div>
+    </div>
+    <div style="background:#0f172a;border-radius:6px;padding:8px;text-align:center;">
+      <div style="color:#fbbf24;font-size:12px;font-weight:600;">created_at</div>
+      <div style="color:#475569;font-size:11px;">INTEGER</div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,95 @@
+.task-list {
+  padding: 16px;
+  margin: 0 auto;
+  max-width: 480px;
+}
+
+.task-list-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 12px;
+}
+
+.task-card {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-card);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-card--claimed {
+  opacity: 0.6;
+}
+
+.task-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.task-desc {
+  font-size: 0.75rem;
+  color: var(--color-text);
+  opacity: 0.7;
+}
+
+.task-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.task-progress-fill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.task-progress-text {
+  font-size: 0.75rem;
+  color: var(--color-text);
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.task-claim-btn {
+  align-self: flex-start;
+  padding: 6px 16px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.task-claim-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.task-claimed-label {
+  font-size: 0.8rem;
+  color: var(--color-success);
+  font-weight: 600;
+}

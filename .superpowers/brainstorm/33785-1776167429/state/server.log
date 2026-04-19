@@ -1,0 +1,8 @@
+{"type":"server-started","port":56068,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:56068","screen_dir":"/Users/admin/Desktop/paly-sdd/.superpowers/brainstorm/33785-1776167429/content","state_dir":"/Users/admin/Desktop/paly-sdd/.superpowers/brainstorm/33785-1776167429/state"}
+{"type":"screen-added","file":"/Users/admin/Desktop/paly-sdd/.superpowers/brainstorm/33785-1776167429/content/game-flow.html"}
+{"type":"screen-added","file":"/Users/admin/Desktop/paly-sdd/.superpowers/brainstorm/33785-1776167429/content/animation-level.html"}
+{"type":"screen-added","file":"/Users/admin/Desktop/paly-sdd/.superpowers/brainstorm/33785-1776167429/content/scratch-layout.html"}
+{"type":"screen-added","file":"/Users/admin/Desktop/paly-sdd/.superpowers/brainstorm/33785-1776167429/content/architecture.html"}
+{"type":"screen-added","file":"/Users/admin/Desktop/paly-sdd/.superpowers/brainstorm/33785-1776167429/content/state-machine.html"}
+{"type":"screen-added","file":"/Users/admin/Desktop/paly-sdd/.superpowers/brainstorm/33785-1776167429/content/tech-detail.html"}
+{"type":"server-stopped","reason":"idle timeout"}

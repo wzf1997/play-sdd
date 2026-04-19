@@ -1,0 +1,84 @@
+/* apps/web/src/games/Grid9/Grid9.css */
+.grid9-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 16px 44px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.grid9-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 90px);
+  gap: 8px;
+  width: 100%;
+}
+
+.grid9-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #2A0010;
+  border: 1.5px solid #C9952A;
+  border-radius: var(--border-radius-card);
+  font-size: 11px;
+  font-weight: 600;
+  color: #F5C842;
+  text-align: center;
+  padding: 8px 4px;
+  transition: background 0.12s, transform 0.12s, box-shadow 0.12s, border-color 0.12s, color 0.12s;
+  overflow: hidden;
+}
+
+.grid9-cell .cell-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* 设计稿激活格：#7A0000 深红背景 + #FFD700 金色文字/2.5px边框 */
+.grid9-cell.active {
+  background: #7A0000;
+  color: #FFD700;
+  border: 2.5px solid #FFD700;
+  transform: scale(1.06);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+}
+
+.grid9-remaining {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.grid9-btn {
+  width: 100%;
+  height: 54px;
+  background: var(--color-primary);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--border-radius-btn);
+  font-size: 1.125rem;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background 0.2s, opacity 0.2s, transform 0.1s;
+}
+
+.grid9-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.grid9-btn:not(:disabled):hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.grid9-btn:not(:disabled):active {
+  transform: translateY(0);
+}

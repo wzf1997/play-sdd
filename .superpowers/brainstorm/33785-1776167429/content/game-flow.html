@@ -1,0 +1,76 @@
+<h2>刮刮乐游戏状态流程</h2>
+<p class="subtitle">根据需求文档整理的主流程，请确认范围是否正确</p>
+
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+
+  <!-- State 1 -->
+  <div style="display:flex;align-items:center;gap:12px;background:#1e293b;border-radius:10px;padding:14px 18px;border-left:4px solid #6366f1;">
+    <div style="background:#6366f1;color:white;font-weight:700;font-size:13px;border-radius:6px;padding:4px 10px;min-width:60px;text-align:center;">状态 1</div>
+    <div>
+      <div style="font-weight:600;color:#f1f5f9;">奖池展示（0.8s）</div>
+      <div style="color:#94a3b8;font-size:13px;">9张奖品图片铺开，展示奖励内容</div>
+    </div>
+    <div style="margin-left:auto;color:#64748b;font-size:20px;">↓</div>
+  </div>
+
+  <!-- State 2 -->
+  <div style="display:flex;align-items:center;gap:12px;background:#1e293b;border-radius:10px;padding:14px 18px;border-left:4px solid #8b5cf6;">
+    <div style="background:#8b5cf6;color:white;font-weight:700;font-size:13px;border-radius:6px;padding:4px 10px;min-width:60px;text-align:center;">状态 2</div>
+    <div>
+      <div style="font-weight:600;color:#f1f5f9;">卡片聚拢动画</div>
+      <div style="color:#94a3b8;font-size:13px;">9张卡片汇聚打乱，叠成一摞</div>
+    </div>
+    <div style="margin-left:auto;color:#64748b;font-size:20px;">↓</div>
+  </div>
+
+  <!-- State 3 -->
+  <div style="display:flex;align-items:center;gap:12px;background:#1e293b;border-radius:10px;padding:14px 18px;border-left:4px solid #0ea5e9;">
+    <div style="background:#0ea5e9;color:white;font-weight:700;font-size:13px;border-radius:6px;padding:4px 10px;min-width:60px;text-align:center;">状态 3</div>
+    <div>
+      <div style="font-weight:600;color:#f1f5f9;">待刮开（9宫格展开）</div>
+      <div style="color:#94a3b8;font-size:13px;">卡片铺平展开，背面朝上，等待用户选择</div>
+    </div>
+    <div style="margin-left:auto;color:#64748b;font-size:20px;">↓</div>
+  </div>
+
+  <!-- State 4 -->
+  <div style="display:flex;align-items:center;gap:12px;background:#1e293b;border-radius:10px;padding:14px 18px;border-left:4px solid #10b981;">
+    <div style="background:#10b981;color:white;font-weight:700;font-size:13px;border-radius:6px;padding:4px 10px;min-width:60px;text-align:center;">状态 4</div>
+    <div>
+      <div style="font-weight:600;color:#f1f5f9;">刮奖中（Canvas 涂抹）</div>
+      <div style="color:#94a3b8;font-size:13px;">用户手指/鼠标在选中卡片上涂抹，露出奖品</div>
+    </div>
+    <div style="margin-left:auto;color:#64748b;font-size:20px;">↓</div>
+  </div>
+
+  <!-- State 5 -->
+  <div style="display:flex;align-items:center;gap:12px;background:#1e293b;border-radius:10px;padding:14px 18px;border-left:4px solid #f59e0b;">
+    <div style="background:#f59e0b;color:white;font-weight:700;font-size:13px;border-radius:6px;padding:4px 10px;min-width:60px;text-align:center;">状态 5</div>
+    <div>
+      <div style="font-weight:600;color:#f1f5f9;">已刮开 + 中奖弹窗</div>
+      <div style="color:#94a3b8;font-size:13px;">展示奖品，弹出「恭喜获得」弹窗，24h 倒计时</div>
+    </div>
+    <div style="margin-left:auto;color:#64748b;font-size:20px;">↓</div>
+  </div>
+
+  <!-- State 6 -->
+  <div style="display:flex;align-items:center;gap:12px;background:#1e293b;border-radius:10px;padding:14px 18px;border-left:4px solid #ef4444;">
+    <div style="background:#ef4444;color:white;font-weight:700;font-size:13px;border-radius:6px;padding:4px 10px;min-width:60px;text-align:center;">状态 6</div>
+    <div>
+      <div style="font-weight:600;color:#f1f5f9;">引导下载</div>
+      <div style="color:#94a3b8;font-size:13px;">点击跳转 App Store / 唤起 App，完成转化</div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:24px;background:#0f172a;border-radius:10px;padding:16px;">
+  <div style="color:#64748b;font-size:12px;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">需要实现的核心技术点</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;">
+    <span style="background:#1e293b;color:#a5b4fc;padding:4px 12px;border-radius:20px;font-size:13px;">Canvas 刮涂效果</span>
+    <span style="background:#1e293b;color:#a5b4fc;padding:4px 10px;border-radius:20px;font-size:13px;">CSS 卡片动画（聚拢/展开）</span>
+    <span style="background:#1e293b;color:#a5b4fc;padding:4px 10px;border-radius:20px;font-size:13px;">触摸/鼠标事件</span>
+    <span style="background:#1e293b;color:#a5b4fc;padding:4px 10px;border-radius:20px;font-size:13px;">弹窗 + 倒计时</span>
+    <span style="background:#1e293b;color:#a5b4fc;padding:4px 10px;border-radius:20px;font-size:13px;">游戏插件架构</span>
+  </div>
+</div>

@@ -1,0 +1,75 @@
+/* apps/web/src/games/SpinWheel/SpinWheel.css */
+.spinwheel-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 16px 28px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.spinwheel-wrapper {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  /* Gold outer ring 6px — 对齐设计稿 outerRing stroke 6px */
+  box-shadow:
+    0 0 0 6px #F5C842,
+    0 0 0 10px rgba(245, 200, 66, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.spinwheel-pointer {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 28px;
+  color: #F5C842;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  z-index: 2;
+  line-height: 1;
+}
+
+.spinwheel-svg {
+  transform-origin: 150px 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: block;
+}
+
+.spinwheel-remaining {
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.spinwheel-btn {
+  width: 100%;
+  height: 54px;
+  background: var(--color-primary);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--border-radius-btn);
+  font-size: 1.125rem;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background 0.2s, opacity 0.2s, transform 0.1s;
+}
+
+.spinwheel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.spinwheel-btn:not(:disabled):hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.spinwheel-btn:not(:disabled):active {
+  transform: translateY(0);
+}

@@ -1,0 +1,137 @@
+/* apps/web/src/pages/DemoCampaign/DemoCampaign.css */
+.demo-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  max-width: 375px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* === Banner — 设计稿高度 190px，内容居中竖排 === */
+.demo-banner {
+  width: 100%;
+  height: 190px;
+  background: linear-gradient(180deg, #A50000 0%, #6B0000 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 20px;
+  gap: 12px;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 装饰光晕 */
+.demo-banner::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(245,200,66,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* 设计稿：44px，字重 800，金色，字间距 -2px */
+.demo-banner h1 {
+  margin: 0;
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: #F5C842;
+  letter-spacing: -0.05em;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 设计稿：13px，白色 70% 透明 */
+.demo-banner p {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+/* === Game Tabs === */
+.game-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  background: #1F0010;
+}
+
+.game-tab {
+  flex: 1;
+  padding: 13px 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  letter-spacing: 0.02em;
+}
+
+.game-tab.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.game-tab:hover:not(.active) {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* === Game area === */
+.demo-game-area {
+  min-height: 320px;
+  display: flex;
+  justify-content: center;
+  background: var(--color-bg);
+}
+
+/* === Prize History === */
+.prize-history {
+  padding: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.prize-history-title {
+  margin: 0 0 12px;
+  font-size: var(--font-size-small);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.prize-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prize-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #2A0010;
+  border: 1px solid rgba(201, 149, 42, 0.3);
+  border-radius: var(--border-radius-card);
+  font-size: var(--font-size-small);
+}
+
+.prize-name {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.prize-time {
+  color: var(--color-text-muted);
+}

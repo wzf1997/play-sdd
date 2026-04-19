@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SDD 完整开发流程 · paly-sdd</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<style>
+  /* ─── Reset & Base ─── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0a0a0f;
+    --bg2:       #0f0f1a;
+    --bg3:       #141428;
+    --surface:   #1a1a2e;
+    --surface2:  #16213e;
+    --border:    rgba(108,99,255,0.18);
+    --border2:   rgba(255,255,255,0.06);
+    --primary:   #6c63ff;
+    --primary-d: #4e45cc;
+    --primary-g: rgba(108,99,255,0.15);
+    --accent:    #ff8906;
+    --accent-g:  rgba(255,137,6,0.15);
+    --green:     #2cb67d;
+    --green-g:   rgba(44,182,125,0.15);
+    --red:       #ff5555;
+    --cyan:      #00d4ff;
+    --text:      #e8e8f0;
+    --text2:     #9898b8;
+    --text3:     #5a5a7a;
+    --mono:      'JetBrains Mono', 'Consolas', monospace;
+    --sans:      'Noto Sans SC', 'PingFang SC', sans-serif;
+    --radius:    10px;
+    --radius-lg: 16px;
+    --ease:      cubic-bezier(0.4,0,0.2,1);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Presentation container ─── */
+  #pres {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ─── Slides ─── */
+  /* opacity / transform / pointer-events controlled entirely by JS inline styles */
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 52px 68px 56px;
+    overflow: hidden;
+  }
+
+  /* ─── Glow backdrop per slide ─── */
+  .slide::before {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-purple::before  { width: 600px; height: 600px; background: rgba(108,99,255,0.12); top: -200px; right: -200px; }
+  .glow-accent::before  { width: 500px; height: 500px; background: rgba(255,137,6,0.10);  bottom: -150px; left: -100px; }
+  .glow-green::before   { width: 550px; height: 550px; background: rgba(44,182,125,0.10); top: -150px; left: 50%; transform: translateX(-50%); }
+  .glow-cyan::before    { width: 500px; height: 500px; background: rgba(0,212,255,0.08);  bottom: -100px; right: -100px; }
+  .glow-dual::before    { width: 800px; height: 400px; background: linear-gradient(90deg,rgba(108,99,255,0.10),rgba(44,182,125,0.10)); top: -100px; left: 50%; transform: translateX(-50%); }
+
+  .slide > * { position: relative; z-index: 1; }
+
+  /* ─── Slide header ─── */
+  .slide-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .slide-label::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+  .slide-title {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 40%, #9898c8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+  .slide-subtitle {
+    font-size: 15px;
+    color: var(--text2);
+    margin-bottom: 28px;
+  }
+
+  /* ─── Two-column layout ─── */
+  .cols {
+    display: grid;
+    gap: 28px;
+    flex: 1;
+    min-height: 0;
+  }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .cols-55 { grid-template-columns: 1.1fr 0.9fr; }
+  .cols-45 { grid-template-columns: 0.9fr 1.1fr; }
+  .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(108,99,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .card-sm {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .card-accent { border-color: rgba(255,137,6,0.25); }
+  .card-green  { border-color: rgba(44,182,125,0.25); }
+  .card-purple { border-color: rgba(108,99,255,0.35); }
+
+  /* ─── Code blocks ─── */
+  pre, code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.65;
+  }
+  .code-block {
+    background: #080810;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    overflow: auto;
+    flex: 1;
+  }
+  .code-block::-webkit-scrollbar { width: 4px; height: 4px; }
+  .code-block::-webkit-scrollbar-track { background: transparent; }
+  .code-block::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .tok-comment { color: #5a5a7a; }
+  .tok-key     { color: #6c63ff; }
+  .tok-str     { color: #2cb67d; }
+  .tok-kw      { color: #ff8906; }
+  .tok-num     { color: #00d4ff; }
+  .tok-fn      { color: #ff5555; }
+  .tok-ok      { color: #2cb67d; }
+  .tok-warn    { color: #ff8906; }
+  .tok-err     { color: #ff5555; }
+  .tok-dim     { color: #5a5a7a; }
+  .tok-hl      { color: #fff; font-weight: 600; }
+
+  /* ─── Tags / Badges ─── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .badge-purple { color: var(--primary); border-color: rgba(108,99,255,0.4); background: rgba(108,99,255,0.08); }
+  .badge-accent { color: var(--accent); border-color: rgba(255,137,6,0.4); background: rgba(255,137,6,0.08); }
+  .badge-green  { color: var(--green);  border-color: rgba(44,182,125,0.4); background: rgba(44,182,125,0.08); }
+  .badge-cyan   { color: var(--cyan);   border-color: rgba(0,212,255,0.4);  background: rgba(0,212,255,0.08); }
+  .badge-red    { color: var(--red);    border-color: rgba(255,85,85,0.4);  background: rgba(255,85,85,0.08); }
+
+  /* ─── Dot navigation ─── */
+  #dots {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+  }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    cursor: pointer;
+    transition: all 0.3s var(--ease);
+    border: 1px solid transparent;
+  }
+  .dot.active {
+    background: var(--primary);
+    box-shadow: 0 0 8px rgba(108,99,255,0.6);
+    transform: scale(1.4);
+  }
+  .dot:hover:not(.active) { background: var(--text2); transform: scale(1.2); }
+
+  /* ─── Bottom controls ─── */
+  #controls {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 100;
+  }
+  .ctrl-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.25s var(--ease);
+    user-select: none;
+  }
+  .ctrl-btn:hover { color: var(--text); border-color: var(--primary); background: var(--primary-g); }
+  .ctrl-btn:active { transform: scale(0.96); }
+
+  #counter {
+    position: fixed;
+    bottom: 26px;
+    right: 76px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    z-index: 100;
+  }
+
+  /* ─── Utility ─── */
+  .flex { display: flex; }
+  .flex-col { display: flex; flex-direction: column; }
+  .gap-8  { gap: 8px; }
+  .gap-10 { gap: 10px; }
+  .gap-12 { gap: 12px; }
+  .gap-16 { gap: 16px; }
+  .gap-20 { gap: 20px; }
+  .gap-24 { gap: 24px; }
+  .flex-1 { flex: 1; }
+  .items-center { align-items: center; }
+  .items-start  { align-items: flex-start; }
+  .wrap { flex-wrap: wrap; }
+  .mt-4  { margin-top:  4px; }
+  .mt-8  { margin-top:  8px; }
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .mb-8  { margin-bottom:  8px; }
+  .mb-12 { margin-bottom: 12px; }
+  .w-full { width: 100%; }
+  .text-sm   { font-size: 12px; }
+  .text-xs   { font-size: 11px; }
+  .text-mono { font-family: var(--mono); }
+  .text-dim  { color: var(--text2); }
+  .text-dim2 { color: var(--text3); }
+  .text-primary { color: var(--primary); }
+  .text-accent  { color: var(--accent); }
+  .text-green   { color: var(--green); }
+  .text-cyan    { color: var(--cyan); }
+  .text-red     { color: var(--red); }
+  .bold { font-weight: 600; }
+  .divider {
+    height: 1px;
+    background: var(--border2);
+    margin: 12px 0;
+  }
+
+  /* ─── Numbered circle ─── */
+  .num-circle {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--primary-g);
+    border: 1px solid rgba(108,99,255,0.4);
+    color: var(--primary);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ─── Step row ─── */
+  .step-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border2);
+  }
+  .step-row:last-child { border-bottom: none; }
+
+  /* ─── Phase card grid ─── */
+  .phase-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    flex: 1;
+  }
+  .phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: border-color 0.25s;
+    cursor: default;
+  }
+  .phase-card:hover { border-color: var(--primary); }
+  .phase-card .emoji { font-size: 20px; line-height: 1; margin-bottom: 4px; }
+  .phase-card .phase-num {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--primary);
+    text-transform: uppercase;
+  }
+  .phase-card .phase-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .phase-card .phase-cmd {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--green);
+    margin-top: 2px;
+  }
+
+  /* ─── Stat card ─── */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .stat-card.c-purple::after { background: var(--primary); }
+  .stat-card.c-accent::after  { background: var(--accent); }
+  .stat-card.c-green::after   { background: var(--green); }
+  .stat-card.c-cyan::after    { background: var(--cyan); }
+  .stat-num {
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+
+  /* ─── Value card ─── */
+  .value-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .value-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .value-card .vc-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 0.1em;
+  }
+  .value-card .vc-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .value-card .vc-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  /* ─── Layer card ─── */
+  .layer-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .layer-arrow {
+    text-align: center;
+    color: var(--text3);
+    font-size: 16px;
+    margin: 2px 0;
+  }
+
+  /* ─── Slide 1 special ─── */
+  #s1 {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  #s1 .big-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  #s1 .big-label::before, #s1 .big-label::after {
+    content: '';
+    display: inline-block;
+    width: 40px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary));
+  }
+  #s1 .big-label::after { background: linear-gradient(90deg, var(--primary), transparent); }
+  #s1 .main-title {
+    font-size: 62px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    background: linear-gradient(135deg, #fff 30%, var(--primary) 70%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+  #s1 .main-sub {
+    font-size: 15px;
+    color: var(--text2);
+    max-width: 560px;
+    margin: 0 auto 32px;
+    line-height: 1.7;
+  }
+  #s1 .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 36px;
+  }
+  #s1 .footer-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+  }
+  #s1 .hero-line {
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, var(--primary), transparent);
+    margin: 0 auto 20px;
+  }
+
+  /* ─── Slide 13 special ─── */
+  #s13 {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  #s13 .end-title {
+    font-size: 52px;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #fff 30%, var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  #s13 .end-sub { font-size: 14px; color: var(--text2); margin-bottom: 6px; }
+  #s13 .cmd-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 720px;
+    margin: 28px auto 32px;
+  }
+
+  /* ─── Scrollable inner areas ─── */
+  .scroll-area {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  .scroll-area::-webkit-scrollbar { width: 3px; }
+  .scroll-area::-webkit-scrollbar-track { background: transparent; }
+  .scroll-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ─── Section heading inside card ─── */
+  .sec-head {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  /* ─── Review badge row ─── */
+  .review-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border2);
+    font-size: 12px;
+  }
+  .review-badge:last-child { border-bottom: none; }
+  .dot-green { width:7px; height:7px; border-radius:50%; background:var(--green); flex-shrink:0; }
+  .dot-red   { width:7px; height:7px; border-radius:50%; background:var(--red);   flex-shrink:0; }
+  .dot-amber { width:7px; height:7px; border-radius:50%; background:var(--accent);flex-shrink:0; }
+
+  /* ─── Knowledge card ─── */
+  .know-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+  }
+  .know-card.k-accent { border-left-color: var(--accent); }
+  .know-card.k-green  { border-left-color: var(--green); }
+</style>
+</head>
+<body>
+
+<div id="pres">
+
+  <!-- ════════════════ SLIDE 1 — Title ════════════════ -->
+  <section class="slide active glow-purple" id="s1">
+    <div class="hero-line"></div>
+    <div class="big-label">Spec-Driven Development</div>
+    <h1 class="main-title">SDD 完整开发流程</h1>
+    <p class="main-sub">一次从 0 到 1 构建 Game Landing Framework 的实践记录</p>
+    <div class="tags">
+      <span class="badge badge-purple">⚡ SuperPowers Skills</span>
+      <span class="badge badge-accent">📋 OpenSpec</span>
+      <span class="badge badge-green">✏️ Pencil MCP</span>
+      <span class="badge badge-cyan">🤖 Claude Code</span>
+    </div>
+    <span class="footer-text">paly-sdd &nbsp;·&nbsp; 2026-03-29 ~ 2026-03-30</span>
+  </section>
+
+  <!-- ════════════════ SLIDE 2 — 什么是SDD ════════════════ -->
+  <section class="slide glow-accent" id="s2">
+    <div class="slide-label">Core Concept</div>
+    <h2 class="slide-title">什么是 SDD？</h2>
+    <div class="cols cols-2" style="flex:1;min-height:0">
+
+      <!-- Left -->
+      <div class="flex-col gap-16">
+        <div class="card flex-col gap-12" style="flex:0 0 auto">
+          <div style="font-size:13px;color:var(--text2);line-height:1.7">
+            <span style="color:var(--text);font-weight:600">Spec-Driven Development</span> 是一种以规格文档为核心的 AI 协作开发范式。
+            <br/><br/>
+            传统开发依赖开发者经验与直觉，而 SDD 强调：<span style="color:var(--primary)">先写规格，再生成代码</span>。规格是 AI 的行为边界，也是团队协作的共识基础。
+          </div>
+        </div>
+        <div class="code-block flex-col gap-0" style="flex:1;min-height:0">
+<pre><span class="tok-comment"># 传统方式</span>
+<span class="tok-kw">idea</span> → <span class="tok-fn">code</span> → <span class="tok-warn">review</span> → <span class="tok-err">bugs</span> → fix...
+
+<span class="tok-comment"># SDD 方式</span>
+<span class="tok-kw">idea</span>
+  → <span class="tok-str">/brainstorming</span>       <span class="tok-comment"># 需求明确</span>
+  → <span class="tok-str">Pencil MCP</span>           <span class="tok-comment"># UI先行</span>
+  → <span class="tok-str">/opsx:propose</span>        <span class="tok-comment"># 规格生成</span>
+  → <span class="tok-str">/writing-plans</span>       <span class="tok-comment"># 任务分解</span>
+  → <span class="tok-str">/using-git-worktrees</span> <span class="tok-comment"># 隔离开发</span>
+  → <span class="tok-str">/subagent-driven-dev</span> <span class="tok-comment"># AI执行</span>
+  → <span class="tok-str">/requesting-review</span>   <span class="tok-comment"># 规格审查</span>
+  → <span class="tok-str">/browser_visible</span>     <span class="tok-comment"># 可视验证</span>
+  → <span class="tok-str">/finishing-a-branch</span>  <span class="tok-comment"># 完成合并</span>
+  → <span class="tok-str">/opsx:archive</span>        <span class="tok-comment"># 归档变更</span>
+  → <span class="tok-str">/capture-knowledge</span>   <span class="tok-comment"># 知识沉淀</span>
+  → <span class="tok-ok">✓ 可审计的高质量交付物</span></pre>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="flex-col gap-12">
+        <div class="card card-purple flex-col gap-10">
+          <div class="flex items-center gap-10">
+            <span style="font-size:22px">⚡</span>
+            <div>
+              <div style="font-weight:700;font-size:13px">SuperPowers Skills</div>
+              <div class="text-dim text-xs mt-4">一套 Claude Code 的命令扩展库，将复杂开发流程封装为可复用的斜杠命令</div>
+            </div>
+          </div>
+          <div class="flex wrap gap-8 mt-4">
+            <span class="badge badge-purple text-xs">/brainstorming</span>
+            <span class="badge badge-purple text-xs">/writing-plans</span>
+            <span class="badge badge-purple text-xs">/subagent-driven-dev</span>
+          </div>
+        </div>
+        <div class="card card-accent flex-col gap-10">
+          <div class="flex items-center gap-10">
+            <span style="font-size:22px">📋</span>
+            <div>
+              <div style="font-weight:700;font-size:13px">OpenSpec</div>
+              <div class="text-dim text-xs mt-4">结构化规格管理系统，自动生成 proposal、contract、schema 等标准化文档</div>
+            </div>
+          </div>
+          <div class="flex wrap gap-8 mt-4">
+            <span class="badge badge-accent text-xs">/opsx:propose</span>
+            <span class="badge badge-accent text-xs">/opsx:archive</span>
+          </div>
+        </div>
+        <div class="card card-green flex-col gap-10">
+          <div class="flex items-center gap-10">
+            <span style="font-size:22px">✏️</span>
+            <div>
+              <div style="font-weight:700;font-size:13px">Pencil MCP</div>
+              <div class="text-dim text-xs mt-4">设计工具的 AI 接口，在写代码前先用 AI 完成 UI 设计稿，实现 UI 先行原则</div>
+            </div>
+          </div>
+          <div class="flex wrap gap-8 mt-4">
+            <span class="badge badge-green text-xs">Design Tokens</span>
+            <span class="badge badge-green text-xs">Component Spec</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 3 — 流程总览 ════════════════ -->
+  <section class="slide glow-dual" id="s3">
+    <div class="slide-label">Process Overview</div>
+    <h2 class="slide-title">11 个阶段 · 12 条命令</h2>
+    <div class="phase-grid">
+      <div class="phase-card">
+        <div class="emoji">💡</div>
+        <div class="phase-num">PHASE 01</div>
+        <div class="phase-name">需求脑暴</div>
+        <div class="phase-cmd">/brainstorming</div>
+      </div>
+      <div class="phase-card">
+        <div class="emoji">🎨</div>
+        <div class="phase-num">PHASE 02</div>
+        <div class="phase-name">UI 设计</div>
+        <div class="phase-cmd">Pencil MCP</div>
+      </div>
+      <div class="phase-card">
+        <div class="emoji">📋</div>
+        <div class="phase-num">PHASE 03</div>
+        <div class="phase-name">规格提案</div>
+        <div class="phase-cmd">/opsx:propose</div>
+      </div>
+      <div class="phase-card">
+        <div class="emoji">📝</div>
+        <div class="phase-num">PHASE 04</div>
+        <div class="phase-name">实施计划</div>
+        <div class="phase-cmd">/writing-plans</div>
+      </div>
+      <div class="phase-card">
+        <div class="emoji">🌿</div>
+        <div class="phase-num">PHASE 05</div>
+        <div class="phase-name">隔离分支</div>
+        <div class="phase-cmd">/using-git-worktrees</div>
+      </div>
+      <div class="phase-card">
+        <div class="emoji">⚙️</div>
+        <div class="phase-num">PHASE 06</div>
+        <div class="phase-name">执行实现</div>
+        <div class="phase-cmd">/subagent-driven-dev</div>
+      </div>
+      <div class="phase-card">
+        <div class="emoji">🔍</div>
+        <div class="phase-num">PHASE 07</div>
+        <div class="phase-name">代码审查</div>
+        <div class="phase-cmd">/requesting-review</div>
+      </div>
+      <div class="phase-card">
+        <div class="emoji">🌐</div>
+        <div class="phase-num">PHASE 08</div>
+        <div class="phase-name">浏览器验证</div>
+        <div class="phase-cmd">/browser_visible</div>
+      </div>
+      <div class="phase-card">
+        <div class="emoji">✅</div>
+        <div class="phase-num">PHASE 09</div>
+        <div class="phase-name">完成分支</div>
+        <div class="phase-cmd">/finishing-a-branch</div>
+      </div>
+      <div class="phase-card">
+        <div class="emoji">📦</div>
+        <div class="phase-num">PHASE 10</div>
+        <div class="phase-name">归档变更</div>
+        <div class="phase-cmd">/opsx:archive</div>
+      </div>
+      <div class="phase-card" style="grid-column: span 2;">
+        <div class="emoji">🧠</div>
+        <div class="phase-num">PHASE 11</div>
+        <div class="phase-name">知识沉淀</div>
+        <div class="phase-cmd">/capture-knowledge</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 4 — Phase 1~2 ════════════════ -->
+  <section class="slide glow-accent" id="s4">
+    <div class="slide-label">Phase 01 — 02</div>
+    <h2 class="slide-title">脑暴 + UI 设计</h2>
+    <div class="cols cols-2" style="flex:1;min-height:0">
+
+      <!-- Left: brainstorming -->
+      <div class="card flex-col gap-12">
+        <div class="sec-head">💡 /brainstorming — 需求明确化</div>
+        <div class="step-row">
+          <div class="num-circle">1</div>
+          <div>
+            <div style="font-size:12px;font-weight:600">描述目标</div>
+            <div class="text-dim text-xs mt-4">用自然语言描述：构建 Game Landing Framework，支持多游戏皮肤、插件化架构</div>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="num-circle">2</div>
+          <div>
+            <div style="font-size:12px;font-weight:600">AI 澄清问题</div>
+            <div class="text-dim text-xs mt-4">Claude 提问：SSR 需求？多语言？皮肤热切换？确定 Monorepo 结构</div>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="num-circle">3</div>
+          <div>
+            <div style="font-size:12px;font-weight:600">确定边界</div>
+            <div class="text-dim text-xs mt-4">4 层架构：皮肤层 / 骨架层 / BFF 层 / 服务层</div>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="num-circle">4</div>
+          <div>
+            <div style="font-size:12px;font-weight:600">技术选型</div>
+            <div class="text-dim text-xs mt-4">Next.js 15 + Tailwind v4 + pnpm workspace + Turborepo</div>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="num-circle">5</div>
+          <div>
+            <div style="font-size:12px;font-weight:600">输出摘要</div>
+            <div class="text-dim text-xs mt-4">生成结构化需求文档，为 Pencil MCP 设计和 OpenSpec 提案做准备</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Pencil MCP -->
+      <div class="flex-col gap-12">
+        <div class="card card-green flex-col gap-10" style="flex:0 0 auto">
+          <div class="sec-head">🎨 Pencil MCP — UI 先行设计</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">
+            在编写任何代码前，先用 Pencil MCP 完成 UI 设计稿，导出 Design Tokens 和组件规格作为视觉合约。
+          </div>
+          <div class="flex wrap gap-6 mt-4">
+            <span class="badge badge-green text-xs">Color System</span>
+            <span class="badge badge-green text-xs">Typography</span>
+            <span class="badge badge-green text-xs">Component Library</span>
+            <span class="badge badge-green text-xs">Layout Grid</span>
+          </div>
+        </div>
+        <div class="code-block flex-1" style="min-height:0">
+<pre><span class="tok-comment">/* Design Tokens — exported from Pencil MCP */</span>
+<span class="tok-kw">:root</span> {
+  <span class="tok-comment">/* Color Palette */</span>
+  <span class="tok-key">--color-primary</span>:    <span class="tok-str">#6c63ff</span>;
+  <span class="tok-key">--color-accent</span>:     <span class="tok-str">#ff8906</span>;
+  <span class="tok-key">--color-success</span>:    <span class="tok-str">#2cb67d</span>;
+  <span class="tok-key">--color-bg</span>:         <span class="tok-str">#0a0a0f</span>;
+  <span class="tok-key">--color-surface</span>:    <span class="tok-str">#1a1a2e</span>;
+
+  <span class="tok-comment">/* Typography */</span>
+  <span class="tok-key">--font-sans</span>:   <span class="tok-str">'Noto Sans SC'</span>, sans-serif;
+  <span class="tok-key">--font-mono</span>:   <span class="tok-str">'JetBrains Mono'</span>, monospace;
+  <span class="tok-key">--font-hero</span>:   <span class="tok-num">72px</span> / <span class="tok-num">1.1</span>;
+  <span class="tok-key">--font-h1</span>:     <span class="tok-num">48px</span> / <span class="tok-num">1.2</span>;
+
+  <span class="tok-comment">/* Spacing Scale */</span>
+  <span class="tok-key">--space-xs</span>: <span class="tok-num">4px</span>;
+  <span class="tok-key">--space-sm</span>: <span class="tok-num">8px</span>;
+  <span class="tok-key">--space-md</span>: <span class="tok-num">16px</span>;
+  <span class="tok-key">--space-lg</span>: <span class="tok-num">32px</span>;
+  <span class="tok-key">--space-xl</span>: <span class="tok-num">64px</span>;
+
+  <span class="tok-comment">/* Radius */</span>
+  <span class="tok-key">--radius-sm</span>: <span class="tok-num">8px</span>;
+  <span class="tok-key">--radius-md</span>: <span class="tok-num">16px</span>;
+  <span class="tok-key">--radius-full</span>: <span class="tok-num">9999px</span>;
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 5 — Phase 3 OpenSpec ════════════════ -->
+  <section class="slide glow-purple" id="s5">
+    <div class="slide-label">Phase 03</div>
+    <h2 class="slide-title">规格提案 /opsx:propose</h2>
+    <div class="cols cols-45" style="flex:1;min-height:0">
+
+      <!-- Left: file tree -->
+      <div class="flex-col gap-12">
+        <div class="card-sm text-xs text-mono text-dim mb-8">生成的规格产物 openspec/specs/</div>
+        <div class="code-block flex-1" style="min-height:0">
+<pre><span class="tok-key">openspec/specs/</span>
+<span class="tok-dim">├──</span> <span class="tok-str">game-landing-framework/</span>
+<span class="tok-dim">│   ├──</span> <span class="tok-ok">proposal.md</span>          <span class="tok-comment">← Why + What</span>
+<span class="tok-dim">│   ├──</span> <span class="tok-ok">contract.md</span>          <span class="tok-comment">← API 接口约定</span>
+<span class="tok-dim">│   ├──</span> <span class="tok-ok">schema.ts</span>            <span class="tok-comment">← Zod 数据结构</span>
+<span class="tok-dim">│   ├──</span> <span class="tok-ok">architecture.md</span>      <span class="tok-comment">← 系统架构图</span>
+<span class="tok-dim">│   ├──</span> <span class="tok-ok">component-spec.md</span>    <span class="tok-comment">← 组件规格</span>
+<span class="tok-dim">│   ├──</span> <span class="tok-ok">data-flow.md</span>         <span class="tok-comment">← 数据流设计</span>
+<span class="tok-dim">│   ├──</span> <span class="tok-ok">testing-strategy.md</span>  <span class="tok-comment">← 测试策略</span>
+<span class="tok-dim">│   └──</span> <span class="tok-ok">changelog.md</span>         <span class="tok-comment">← 变更记录</span>
+<span class="tok-dim">└──</span> <span class="tok-str">index.json</span>               <span class="tok-comment">← 规格注册表</span>
+
+<span class="tok-comment">─────────────────────────────</span>
+<span class="tok-ok">✓</span> 8 个规格文件自动生成
+<span class="tok-ok">✓</span> 结构化、可审计、可版本追踪
+<span class="tok-ok">✓</span> 作为后续所有阶段的真理来源</pre>
+        </div>
+      </div>
+
+      <!-- Right: Why + capabilities -->
+      <div class="flex-col gap-12">
+        <div class="card card-accent flex-col gap-8" style="flex:0 0 auto">
+          <div class="sec-head">proposal.md — Why</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.65">
+            现有方案缺乏 <span style="color:var(--accent)">跨游戏可复用的 Landing 基础设施</span>。每次新游戏上线都需重写相似的首页逻辑，缺少统一的设计语言约束和插件化能力，导致代码重复、维护成本高。
+          </div>
+        </div>
+        <div style="font-size:11px;font-family:var(--mono);font-weight:700;letter-spacing:0.15em;color:var(--text3);text-transform:uppercase;margin-bottom:2px">8 大能力规格</div>
+        <div class="flex-col gap-8" style="flex:1">
+          <div class="card-sm flex items-center gap-10">
+            <span class="badge badge-purple" style="width:22px;height:22px;padding:0;justify-content:center;border-radius:50%;font-size:10px">1</span>
+            <span style="font-size:12px">多游戏皮肤系统 — CSS token 热切换</span>
+          </div>
+          <div class="card-sm flex items-center gap-10">
+            <span class="badge badge-purple" style="width:22px;height:22px;padding:0;justify-content:center;border-radius:50%;font-size:10px">2</span>
+            <span style="font-size:12px">插件化游戏注册 — GamePlugin interface</span>
+          </div>
+          <div class="card-sm flex items-center gap-10">
+            <span class="badge badge-purple" style="width:22px;height:22px;padding:0;justify-content:center;border-radius:50%;font-size:10px">3</span>
+            <span style="font-size:12px">BFF 数据聚合层 — API 路由代理</span>
+          </div>
+          <div class="card-sm flex items-center gap-10">
+            <span class="badge badge-accent" style="width:22px;height:22px;padding:0;justify-content:center;border-radius:50%;font-size:10px">4</span>
+            <span style="font-size:12px">SEO 基础设施 — 结构化数据 + 元信息</span>
+          </div>
+          <div class="card-sm flex items-center gap-10">
+            <span class="badge badge-accent" style="width:22px;height:22px;padding:0;justify-content:center;border-radius:50%;font-size:10px">5</span>
+            <span style="font-size:12px">A/B 测试支持 — 实验配置注入</span>
+          </div>
+          <div class="card-sm flex items-center gap-10">
+            <span class="badge badge-green" style="width:22px;height:22px;padding:0;justify-content:center;border-radius:50%;font-size:10px">6</span>
+            <span style="font-size:12px">性能预算 — LCP &lt; 2.5s, CLS &lt; 0.1</span>
+          </div>
+          <div class="card-sm flex items-center gap-10">
+            <span class="badge badge-green" style="width:22px;height:22px;padding:0;justify-content:center;border-radius:50%;font-size:10px">7</span>
+            <span style="font-size:12px">测试策略 — Unit + Integration + E2E</span>
+          </div>
+          <div class="card-sm flex items-center gap-10">
+            <span class="badge badge-cyan" style="width:22px;height:22px;padding:0;justify-content:center;border-radius:50%;font-size:10px">8</span>
+            <span style="font-size:12px">Monorepo 结构 — pnpm + Turborepo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 6 — Phase 4~5 ════════════════ -->
+  <section class="slide glow-cyan" id="s6">
+    <div class="slide-label">Phase 04 — 05</div>
+    <h2 class="slide-title">实施计划 + 隔离分支</h2>
+    <div class="cols cols-2" style="flex:1;min-height:0">
+
+      <!-- Left: writing-plans -->
+      <div class="flex-col gap-10">
+        <div class="flex items-center gap-10 mb-8">
+          <span class="badge badge-purple">/writing-plans</span>
+          <span class="text-dim text-xs">将规格分解为 15 个可执行任务</span>
+        </div>
+        <div class="code-block flex-1" style="min-height:0">
+<pre><span class="tok-comment"># tasks.md — 15 个实施任务</span>
+
+<span class="tok-kw">Setup</span>
+<span class="tok-ok">T01</span> 初始化 pnpm monorepo + Turborepo
+<span class="tok-ok">T02</span> 配置 TypeScript 基础 tsconfig
+<span class="tok-ok">T03</span> 创建 packages/core 骨架层
+
+<span class="tok-kw">Core Framework</span>
+<span class="tok-ok">T04</span> 实现 GamePlugin 接口定义
+<span class="tok-ok">T05</span> 实现皮肤 token 系统
+<span class="tok-ok">T06</span> 实现游戏注册表 registry
+<span class="tok-ok">T07</span> 实现 BFF API 路由层
+
+<span class="tok-kw">UI Components</span>
+<span class="tok-ok">T08</span> Hero 区块组件
+<span class="tok-ok">T09</span> Features 功能列表组件
+<span class="tok-ok">T10</span> CTA 行动号召组件
+<span class="tok-ok">T11</span> Footer 底栏组件
+
+<span class="tok-kw">Game Implementation</span>
+<span class="tok-ok">T12</span> 创建 apps/game-alpha 示范皮肤
+<span class="tok-ok">T13</span> 接入 GamePlugin 插件
+
+<span class="tok-kw">Quality</span>
+<span class="tok-ok">T14</span> 编写 Unit + Integration 测试
+<span class="tok-ok">T15</span> 性能验证 + SEO 检查</pre>
+        </div>
+      </div>
+
+      <!-- Right: worktrees -->
+      <div class="flex-col gap-10">
+        <div class="flex items-center gap-10 mb-8">
+          <span class="badge badge-green">/using-git-worktrees</span>
+          <span class="text-dim text-xs">完全隔离的开发环境</span>
+        </div>
+        <div class="code-block flex-1" style="min-height:0">
+<pre><span class="tok-comment"># 创建隔离工作树</span>
+<span class="tok-kw">$</span> <span class="tok-fn">git</span> worktree add \
+    .claude/worktrees/feat-game-landing \
+    -b feat/game-landing-framework
+
+<span class="tok-ok">Preparing worktree (new branch</span>
+<span class="tok-ok">'feat/game-landing-framework')</span>
+<span class="tok-ok">HEAD is now at 4ba39be</span>
+
+<span class="tok-comment"># 隔离目录结构</span>
+<span class="tok-kw">paly-sdd/</span>
+<span class="tok-dim">└── .claude/worktrees/</span>
+    <span class="tok-str">└── feat-game-landing/</span>   <span class="tok-comment">← 独立目录</span>
+        <span class="tok-dim">├── apps/</span>
+        <span class="tok-dim">├── packages/</span>
+        <span class="tok-dim">└── openspec/</span>
+
+<span class="tok-comment"># 优势</span>
+<span class="tok-ok">✓</span> main 分支不受影响
+<span class="tok-ok">✓</span> 可同时运行多个开发任务
+<span class="tok-ok">✓</span> 完整的 git 追踪
+<span class="tok-ok">✓</span> 一键清理 worktree
+
+<span class="tok-comment"># 当前工作树</span>
+<span class="tok-kw">$</span> <span class="tok-fn">git</span> worktree list
+<span class="tok-str">/Users/admin/Desktop/paly-sdd</span>
+  <span class="tok-ok">4ba39be [master]</span>
+<span class="tok-str">.claude/worktrees/feat-game-landing</span>
+  <span class="tok-ok">4ba39be [feat/game-landing-framework]</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 7 — Phase 6 SDD execution ════════════════ -->
+  <section class="slide glow-purple" id="s7">
+    <div class="slide-label">Phase 06</div>
+    <h2 class="slide-title">执行实现 /subagent-driven-development</h2>
+    <div class="cols cols-45" style="flex:1;min-height:0">
+
+      <!-- Left: 4 steps -->
+      <div class="flex-col gap-10">
+        <div class="card flex items-start gap-12" style="border-left:3px solid var(--primary)">
+          <div class="num-circle" style="background:var(--primary);color:#fff">1</div>
+          <div>
+            <div style="font-size:13px;font-weight:700">AI 子代理实现</div>
+            <div class="text-dim text-xs mt-4">按 tasks.md 顺序，AI 子代理逐一执行 15 个任务，每个任务独立完成并提交</div>
+          </div>
+        </div>
+        <div class="card flex items-start gap-12" style="border-left:3px solid var(--accent)">
+          <div class="num-circle" style="background:var(--accent-g);border-color:var(--accent);color:var(--accent)">2</div>
+          <div>
+            <div style="font-size:13px;font-weight:700">规格合规审查</div>
+            <div class="text-dim text-xs mt-4">对比 contract.md + schema.ts，逐条验证实现是否符合规格约定</div>
+          </div>
+        </div>
+        <div class="card flex items-start gap-12" style="border-left:3px solid var(--cyan)">
+          <div class="num-circle" style="background:rgba(0,212,255,0.1);border-color:var(--cyan);color:var(--cyan)">3</div>
+          <div>
+            <div style="font-size:13px;font-weight:700">代码质量审查</div>
+            <div class="text-dim text-xs mt-4">TypeScript 类型安全、错误处理、测试覆盖率、性能预算检查</div>
+          </div>
+        </div>
+        <div class="card flex items-start gap-12" style="border-left:3px solid var(--green)">
+          <div class="num-circle" style="background:var(--green-g);border-color:var(--green);color:var(--green)">4</div>
+          <div>
+            <div style="font-size:13px;font-weight:700">修复 + 重审</div>
+            <div class="text-dim text-xs mt-4">针对 7 个发现的问题逐一修复，修复后重新对照规格验证通过</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: code blocks -->
+      <div class="flex-col gap-10">
+        <div class="code-block" style="flex:1;min-height:0">
+<pre><span class="tok-comment">─── 规格合规性审查输出 ───</span>
+<span class="tok-ok">✓</span> <span class="tok-hl">GamePlugin interface</span>
+  implements: name, version, meta ✓
+  skin tokens exported ✓
+  register() function present ✓
+
+<span class="tok-ok">✓</span> <span class="tok-hl">BFF API routes</span>
+  GET /api/game/:id → GameConfig ✓
+  response matches schema.ts ✓
+
+<span class="tok-warn">⚠</span> <span class="tok-hl">SEO metadata</span>
+  missing og:image in game-alpha ✗
+  → <span class="tok-kw">fix: add OpenGraph image meta</span>
+
+<span class="tok-warn">⚠</span> <span class="tok-hl">Performance budget</span>
+  hero image not lazy loaded ✗
+  → <span class="tok-kw">fix: add loading="lazy" + blur</span></pre>
+        </div>
+        <div class="code-block" style="flex:1;min-height:0">
+<pre><span class="tok-comment">─── 代码质量审查 Issues ───</span>
+<span class="tok-err">✗</span> GameRegistry missing error boundary
+<span class="tok-err">✗</span> useGameData hook no loading state
+<span class="tok-err">✗</span> Missing aria-label on CTA button
+<span class="tok-err">✗</span> BFF handler untyped error catch
+<span class="tok-err">✗</span> token fallback undefined in dark mode
+
+<span class="tok-comment">─── 修复后状态 ───</span>
+<span class="tok-ok">✓</span> ErrorBoundary wrapping registry
+<span class="tok-ok">✓</span> Skeleton UI on loading state
+<span class="tok-ok">✓</span> aria-label="Play {gameName} Now"
+<span class="tok-ok">✓</span> typed ApiError extends Error
+<span class="tok-ok">✓</span> dark token defaults applied
+
+<span class="tok-dim">7 issues found → 7 fixed → 0 remain</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 8 — Phase 7~8 ════════════════ -->
+  <section class="slide glow-green" id="s8">
+    <div class="slide-label">Phase 07 — 08</div>
+    <h2 class="slide-title">代码审查 + 浏览器验证</h2>
+    <div class="cols cols-2" style="flex:1;min-height:0">
+
+      <!-- Left: code review -->
+      <div class="flex-col gap-12">
+        <div class="card flex-col gap-8">
+          <div class="sec-head">🔍 /requesting-review</div>
+          <div class="review-badge"><div class="dot-green"></div><span style="font-size:12px">TypeScript strict — 0 errors</span></div>
+          <div class="review-badge"><div class="dot-green"></div><span style="font-size:12px">ESLint — 0 warnings</span></div>
+          <div class="review-badge"><div class="dot-green"></div><span style="font-size:12px">Tests — 19/19 passing</span></div>
+          <div class="review-badge"><div class="dot-green"></div><span style="font-size:12px">Bundle size — within budget</span></div>
+          <div class="review-badge"><div class="dot-green"></div><span style="font-size:12px">Accessibility — WCAG AA</span></div>
+        </div>
+        <div class="card card-accent flex-col gap-8">
+          <div class="sec-head">Issues Found &amp; Fixed</div>
+          <div class="review-badge"><div class="dot-amber"></div><span style="font-size:12px">og:image meta missing → added</span></div>
+          <div class="review-badge"><div class="dot-amber"></div><span style="font-size:12px">hero image lazy load → fixed</span></div>
+          <div class="review-badge"><div class="dot-amber"></div><span style="font-size:12px">error boundary missing → added</span></div>
+          <div class="review-badge"><div class="dot-amber"></div><span style="font-size:12px">aria-label on CTA → added</span></div>
+          <div class="review-badge"><div class="dot-amber"></div><span style="font-size:12px">dark token fallback → fixed</span></div>
+        </div>
+      </div>
+
+      <!-- Right: browser mockup -->
+      <div class="flex-col gap-10">
+        <div class="flex items-center gap-10">
+          <span class="badge badge-cyan">/browser_visible</span>
+          <span class="text-dim text-xs">可视化验证 localhost:3000</span>
+        </div>
+        <div class="code-block flex-1" style="min-height:0">
+<pre><span class="tok-dim">┌─────────────────────────────────────────┐</span>
+<span class="tok-dim">│</span> <span class="tok-str">◉</span> <span class="tok-str">◉</span> <span class="tok-str">◉</span>  <span class="tok-dim">localhost:3000/game-alpha</span>       <span class="tok-dim">│</span>
+<span class="tok-dim">├─────────────────────────────────────────┤</span>
+<span class="tok-dim">│</span>                                         <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>   <span class="tok-key">GAME ALPHA</span>                           <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>   <span class="tok-hl">征服星际</span>                              <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>   <span class="tok-hl">建立你的宇宙帝国</span>                       <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>                                         <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>   <span class="tok-str">[ 立即开始游戏 →  ]</span>                   <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>   <span class="tok-dim">[ 了解更多       ]</span>                   <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>                                         <span class="tok-dim">│</span>
+<span class="tok-dim">├─────────────────────────────────────────┤</span>
+<span class="tok-dim">│</span>  <span class="tok-ok">⚡ 高速服务器</span>  <span class="tok-ok">🌍 全球节点</span>  <span class="tok-ok">🛡 安全</span>   <span class="tok-dim">│</span>
+<span class="tok-dim">├─────────────────────────────────────────┤</span>
+<span class="tok-dim">│</span>  <span class="tok-accent" style="color:var(--accent)">Features:</span>                             <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>  <span class="tok-ok">●</span> 实时多人对战     <span class="tok-ok">●</span> 自定义飞船        <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>  <span class="tok-ok">●</span> 每周赛季更新     <span class="tok-ok">●</span> 跨平台进度        <span class="tok-dim">│</span>
+<span class="tok-dim">│</span>                                         <span class="tok-dim">│</span>
+<span class="tok-dim">└─────────────────────────────────────────┘</span>
+
+<span class="tok-ok">✓</span> 页面正常渲染
+<span class="tok-ok">✓</span> 皮肤 tokens 正确注入
+<span class="tok-ok">✓</span> CTA 按钮交互正常
+<span class="tok-ok">✓</span> 响应式布局 — mobile OK</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 9 — Phase 9~11 ════════════════ -->
+  <section class="slide glow-accent" id="s9">
+    <div class="slide-label">Phase 09 — 11</div>
+    <h2 class="slide-title">完成 · 归档 · 知识沉淀</h2>
+    <div class="cols cols-2" style="flex:1;min-height:0">
+
+      <!-- Left -->
+      <div class="flex-col gap-10">
+        <div class="code-block" style="flex:0 0 auto">
+<pre><span class="tok-comment">─── /finishing-a-branch ───</span>
+<span class="tok-kw">Test Results:</span>
+  Test Suites: <span class="tok-ok">6 passed</span>, 6 total
+  Tests:       <span class="tok-ok">19 passed</span>, 19 total
+  Snapshots:   0 total
+  Time:        <span class="tok-num">3.842s</span>
+
+<span class="tok-kw">$</span> <span class="tok-fn">git</span> checkout main
+<span class="tok-kw">$</span> <span class="tok-fn">git</span> merge feat/game-landing-framework
+<span class="tok-ok">Merge made by the 'ort' strategy.</span>
+ <span class="tok-str">apps/game-alpha/</span>    | <span class="tok-ok">++++</span> 42 files
+ <span class="tok-str">packages/core/</span>      | <span class="tok-ok">++++</span> 31 files
+ <span class="tok-str">packages/ui/</span>        | <span class="tok-ok">++++</span> 18 files
+ <span class="tok-str">openspec/specs/</span>     | <span class="tok-ok">++++</span>  8 files
+ <span class="tok-dim">7970 insertions(+)</span></pre>
+        </div>
+        <div class="code-block flex-1" style="min-height:0">
+<pre><span class="tok-comment">─── /opsx:archive ───</span>
+<span class="tok-kw">$</span> opsx archive \
+    --spec game-landing-framework \
+    --version 1.0.0
+
+<span class="tok-ok">✓</span> snapshot: spec v1.0.0
+<span class="tok-ok">✓</span> linked: commit 7f3a2b1
+<span class="tok-ok">✓</span> changelog.md updated
+<span class="tok-ok">✓</span> index.json registered
+
+<span class="tok-dim">Archive complete: 2026-03-30</span></pre>
+        </div>
+      </div>
+
+      <!-- Right: knowledge cards -->
+      <div class="flex-col gap-12">
+        <div style="font-size:11px;font-family:var(--mono);font-weight:700;letter-spacing:0.15em;color:var(--text3);text-transform:uppercase;margin-bottom:4px">🧠 /capture-knowledge → Feishu</div>
+        <div class="know-card">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--primary);margin-bottom:6px">K001 · SDD 最佳实践</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:4px">规格先行比代码先行降低 70% 返工率</div>
+          <div class="text-dim text-xs">在本次实践中，由于提前定义了 contract.md 和 schema.ts，AI 生成的代码 API 接口零偏差，仅在非规格层面发现 7 个质量问题</div>
+        </div>
+        <div class="know-card k-accent">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--accent);margin-bottom:6px">K002 · 架构模式</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:4px">GamePlugin 插件模式适用于多品牌 Landing</div>
+          <div class="text-dim text-xs">将游戏特定逻辑封装为 GamePlugin，骨架层只依赖接口而非实现，新游戏上线只需实现 plugin 即可，接入成本 &lt; 2小时</div>
+        </div>
+        <div class="know-card k-green">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--green);margin-bottom:6px">K003 · 工具链洞察</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:4px">Pencil MCP → Design Token → CSS 是最短路径</div>
+          <div class="text-dim text-xs">UI 先行 + Token 导出 + 代码直接消费，消除了设计稿与实现的视觉偏差，无需反复对齐</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 10 — Architecture ════════════════ -->
+  <section class="slide glow-dual" id="s10">
+    <div class="slide-label">Architecture</div>
+    <h2 class="slide-title">四层 Monorepo 架构</h2>
+    <div class="cols cols-2" style="flex:1;min-height:0">
+
+      <!-- Left: layers -->
+      <div class="flex-col gap-0" style="justify-content:center">
+        <div class="layer-card" style="border-color:rgba(108,99,255,0.4);background:rgba(108,99,255,0.07)">
+          <div style="font-size:20px">🎨</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--primary)">皮肤层 — apps/game-*</div>
+            <div class="text-dim text-xs mt-4">各游戏独立应用，实现 GamePlugin 接口，注入皮肤 tokens</div>
+            <div class="text-mono text-xs text-dim2 mt-4">apps/game-alpha/ · apps/game-beta/</div>
+          </div>
+        </div>
+        <div class="layer-arrow">↕</div>
+        <div class="layer-card" style="border-color:rgba(255,137,6,0.4);background:rgba(255,137,6,0.07)">
+          <div style="font-size:20px">🦴</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--accent)">骨架层 — packages/core + ui</div>
+            <div class="text-dim text-xs mt-4">框架无关的 Landing 核心逻辑、共享 UI 组件库</div>
+            <div class="text-mono text-xs text-dim2 mt-4">packages/core/ · packages/ui/</div>
+          </div>
+        </div>
+        <div class="layer-arrow">↕</div>
+        <div class="layer-card" style="border-color:rgba(0,212,255,0.4);background:rgba(0,212,255,0.07)">
+          <div style="font-size:20px">🔌</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--cyan)">BFF 层 — apps/bff</div>
+            <div class="text-dim text-xs mt-4">数据聚合、API 代理、SSR 数据预取</div>
+            <div class="text-mono text-xs text-dim2 mt-4">apps/bff/api/ · apps/bff/middleware/</div>
+          </div>
+        </div>
+        <div class="layer-arrow">↕</div>
+        <div class="layer-card" style="border-color:rgba(44,182,125,0.4);background:rgba(44,182,125,0.07)">
+          <div style="font-size:20px">⚙️</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--green)">服务层 — packages/services</div>
+            <div class="text-dim text-xs mt-4">游戏数据 SDK、用户系统、支付接口抽象</div>
+            <div class="text-mono text-xs text-dim2 mt-4">packages/services/game · /user · /payment</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: code + onboarding -->
+      <div class="flex-col gap-12">
+        <div class="code-block" style="flex:1;min-height:0">
+<pre><span class="tok-comment">// GamePlugin Interface (contract.md)</span>
+<span class="tok-kw">interface</span> <span class="tok-hl">GamePlugin</span> {
+  <span class="tok-key">name</span>:    <span class="tok-str">string</span>
+  <span class="tok-key">version</span>: <span class="tok-str">string</span>
+  <span class="tok-key">meta</span>: {
+    <span class="tok-key">title</span>:       <span class="tok-str">string</span>
+    <span class="tok-key">description</span>: <span class="tok-str">string</span>
+    <span class="tok-key">ogImage</span>:     <span class="tok-str">string</span>
+    <span class="tok-key">keywords</span>:    <span class="tok-str">string[]</span>
+  }
+  <span class="tok-key">tokens</span>: <span class="tok-str">SkinTokens</span>   <span class="tok-comment">// CSS token map</span>
+  <span class="tok-key">sections</span>: <span class="tok-str">SectionConfig[]</span>
+  <span class="tok-fn">register</span>(<span class="tok-key">registry</span>: <span class="tok-str">GameRegistry</span>): <span class="tok-kw">void</span>
+}
+
+<span class="tok-comment">// 注册新游戏</span>
+<span class="tok-kw">export const</span> <span class="tok-hl">gameAlpha</span>: <span class="tok-str">GamePlugin</span> = {
+  name: <span class="tok-str">'game-alpha'</span>,
+  version: <span class="tok-str">'1.0.0'</span>,
+  meta: { title: <span class="tok-str">'Game Alpha'</span>, ... },
+  tokens: <span class="tok-str">alphaTokens</span>,
+  sections: [heroSection, featuresSection],
+  register(<span class="tok-key">r</span>) { r.add(<span class="tok-kw">this</span>) }
+}</pre>
+        </div>
+        <div class="card card-green flex-col gap-10">
+          <div class="sec-head">新游戏接入 3 步流程</div>
+          <div class="step-row">
+            <div class="num-circle" style="background:var(--green-g);border-color:var(--green);color:var(--green)">1</div>
+            <div class="text-xs">实现 <span class="text-green text-mono">GamePlugin</span> 接口，定义皮肤 tokens 和页面 sections</div>
+          </div>
+          <div class="step-row">
+            <div class="num-circle" style="background:var(--green-g);border-color:var(--green);color:var(--green)">2</div>
+            <div class="text-xs">调用 <span class="text-green text-mono">registry.add(plugin)</span> 完成注册</div>
+          </div>
+          <div class="step-row" style="border-bottom:none">
+            <div class="num-circle" style="background:var(--green-g);border-color:var(--green);color:var(--green)">3</div>
+            <div class="text-xs">BFF 层自动代理数据，骨架层渲染完整 Landing 页</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 11 — Numbers ════════════════ -->
+  <section class="slide glow-purple" id="s11">
+    <div class="slide-label">Results</div>
+    <h2 class="slide-title">关键数字</h2>
+    <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;gap:16px">
+      <div class="stat-card c-purple">
+        <div class="stat-num" style="color:var(--primary)">1天</div>
+        <div class="stat-label">完整交付周期</div>
+        <div class="text-xs text-dim2 mt-4">2026-03-29<br/>~ 2026-03-30</div>
+      </div>
+      <div class="stat-card c-accent">
+        <div class="stat-num" style="color:var(--accent)">15</div>
+        <div class="stat-label">实施任务 Tasks</div>
+        <div class="text-xs text-dim2 mt-4">按规格分解<br/>全部完成</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-num" style="color:var(--green)">19/19</div>
+        <div class="stat-label">测试通过率</div>
+        <div class="text-xs text-dim2 mt-4">Unit + Integration<br/>100% Pass</div>
+      </div>
+      <div class="stat-card c-cyan">
+        <div class="stat-num" style="color:var(--cyan)">7970</div>
+        <div class="stat-label">新增代码行数</div>
+        <div class="text-xs text-dim2 mt-4">insertions<br/>zero deletions</div>
+      </div>
+      <div class="stat-card c-accent">
+        <div class="stat-num" style="color:var(--accent)">8</div>
+        <div class="stat-label">规格文档</div>
+        <div class="text-xs text-dim2 mt-4">proposal · contract<br/>schema · 5 more</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-num" style="color:var(--primary)">12</div>
+        <div class="stat-label">SuperPowers 命令</div>
+        <div class="text-xs text-dim2 mt-4">覆盖完整<br/>SDD 生命周期</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-num" style="color:var(--green)">7</div>
+        <div class="stat-label">Bug 修复</div>
+        <div class="text-xs text-dim2 mt-4">规格审查发现<br/>全部修复</div>
+      </div>
+      <div class="stat-card c-cyan">
+        <div class="stat-num" style="color:var(--cyan)">3</div>
+        <div class="stat-label">知识条目</div>
+        <div class="text-xs text-dim2 mt-4">沉淀到 Feishu<br/>团队共享</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 12 — Core Values ════════════════ -->
+  <section class="slide glow-dual" id="s12">
+    <div class="slide-label">Core Values</div>
+    <h2 class="slide-title">SDD 的 6 大核心价值</h2>
+    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:14px">
+      <div class="value-card">
+        <div class="vc-num">01</div>
+        <div class="vc-title">规格即文档</div>
+        <div class="vc-desc">规格文件 IS 文档。写一次，AI 执行、人工审阅、团队共识三用，消除文档与代码的分裂</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num" style="color:var(--accent)">02</div>
+        <div class="vc-title">可审计性</div>
+        <div class="vc-desc">每个实现决策都可追溯到对应的规格条目。代码为什么这样写？因为 contract.md 第 12 行这样规定</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num" style="color:var(--cyan)">03</div>
+        <div class="vc-title">AI 友好</div>
+        <div class="vc-desc">结构化规格是 AI 最好的输入。有了规格约束，AI 生成的代码接口零偏差，大幅降低返工率</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num" style="color:var(--green)">04</div>
+        <div class="vc-title">可复用性</div>
+        <div class="vc-desc">骨架层与皮肤层分离，新游戏只需实现 GamePlugin 接口即可复用整套 Landing 基础设施</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num" style="color:var(--accent)">05</div>
+        <div class="vc-title">UI 先行</div>
+        <div class="vc-desc">Pencil MCP 先出设计稿，导出 Design Tokens，代码直接消费。消除视觉偏差，无需反复对齐</div>
+      </div>
+      <div class="value-card">
+        <div class="vc-num" style="color:var(--primary)">06</div>
+        <div class="vc-title">知识留存</div>
+        <div class="vc-desc">/capture-knowledge 将每次项目实践中的洞察结构化，沉淀到团队知识库，形成组织资产</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SLIDE 13 — End ════════════════ -->
+  <section class="slide glow-purple" id="s13">
+    <div style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--primary);margin-bottom:24px;display:flex;align-items:center;justify-content:center;gap:10px">
+      <span style="display:inline-block;width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--primary))"></span>
+      The End
+      <span style="display:inline-block;width:40px;height:1px;background:linear-gradient(90deg,var(--primary),transparent)"></span>
+    </div>
+    <h1 class="end-title">规格驱动，AI 执行</h1>
+    <p class="end-sub">先写规格，再生成代码</p>
+    <p class="end-sub">让 AI 成为真正可控的工程工具</p>
+    <div class="cmd-grid">
+      <span class="badge badge-purple">/brainstorming</span>
+      <span class="badge badge-green">Pencil MCP</span>
+      <span class="badge badge-accent">/opsx:propose</span>
+      <span class="badge badge-purple">/writing-plans</span>
+      <span class="badge badge-cyan">/using-git-worktrees</span>
+      <span class="badge badge-purple">/subagent-driven-dev</span>
+      <span class="badge badge-green">/requesting-review</span>
+      <span class="badge badge-cyan">/browser_visible</span>
+      <span class="badge badge-purple">/finishing-a-branch</span>
+      <span class="badge badge-accent">/opsx:archive</span>
+      <span class="badge badge-green">/capture-knowledge</span>
+      <span class="badge badge-purple">/opsx:verify</span>
+    </div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:0.1em">
+      paly-sdd &nbsp;·&nbsp; 2026-03-29 ~ 2026-03-30 &nbsp;·&nbsp; Powered by Claude Code + SuperPowers Skills
+    </div>
+  </section>
+
+</div><!-- /pres -->
+
+<!-- ─── Dot navigation ─── -->
+<nav id="dots"></nav>
+
+<!-- ─── Bottom controls ─── -->
+<div id="controls">
+  <button class="ctrl-btn" id="btn-prev">← Prev</button>
+  <button class="ctrl-btn" id="btn-next">Next →</button>
+</div>
+
+<!-- ─── Slide counter ─── -->
+<div id="counter">1 / 13</div>
+
+<script>
+(function () {
+  const slides   = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const counter  = document.getElementById('counter');
+  const btnPrev  = document.getElementById('btn-prev');
+  const btnNext  = document.getElementById('btn-next');
+  const TOTAL    = slides.length;
+  const DURATION = 420; // ms — matches CSS transition
+  let current    = 0;
+  let animating  = false;
+
+  // ── Build dots ──
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.title = 'Slide ' + (i + 1);
+    d.addEventListener('click', () => goTo(i));
+    dotsWrap.appendChild(d);
+  });
+
+  // ── Init: put all slides in their resting state ──
+  slides.forEach((s, i) => {
+    s.style.transition = 'none';
+    s.style.position   = 'absolute';
+    s.style.inset      = '0';
+    if (i === 0) {
+      s.style.opacity   = '1';
+      s.style.transform = 'translateX(0)';
+      s.style.pointerEvents = 'auto';
+    } else {
+      s.style.opacity   = '0';
+      s.style.transform = 'translateX(80px)';
+      s.style.pointerEvents = 'none';
+    }
+  });
+  // Force layout flush before enabling transitions
+  void slides[0].offsetHeight;
+  slides.forEach(s => { s.style.transition = 'opacity 0.42s ease, transform 0.42s ease'; });
+
+  function goTo(idx) {
+    if (animating || idx === current || idx < 0 || idx >= TOTAL) return;
+    animating = true;
+
+    const from    = current;
+    const to      = idx;
+    const forward = to > from;
+
+    // Position incoming slide off-screen (no transition yet)
+    slides[to].style.transition  = 'none';
+    slides[to].style.opacity     = '0';
+    slides[to].style.transform   = forward ? 'translateX(80px)' : 'translateX(-80px)';
+    slides[to].style.pointerEvents = 'none';
+
+    // Force paint so the browser registers the off-screen position
+    void slides[to].offsetHeight;
+
+    // Re-enable transitions on both slides
+    slides[from].style.transition = 'opacity 0.42s ease, transform 0.42s ease';
+    slides[to].style.transition   = 'opacity 0.42s ease, transform 0.42s ease';
+
+    // Animate OUT the current slide
+    slides[from].style.opacity     = '0';
+    slides[from].style.transform   = forward ? 'translateX(-80px)' : 'translateX(80px)';
+    slides[from].style.pointerEvents = 'none';
+
+    // Animate IN the next slide
+    slides[to].style.opacity     = '1';
+    slides[to].style.transform   = 'translateX(0)';
+    slides[to].style.pointerEvents = 'auto';
+
+    current = to;
+    updateUI();
+
+    setTimeout(() => { animating = false; }, DURATION + 30);
+  }
+
+  function updateUI() {
+    counter.textContent = (current + 1) + ' / ' + TOTAL;
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+    btnPrev.style.opacity = current === 0       ? '0.35' : '1';
+    btnNext.style.opacity = current === TOTAL-1 ? '0.35' : '1';
+  }
+
+  btnPrev.addEventListener('click', () => goTo(current - 1));
+  btnNext.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', ' '].includes(e.key)) {
+      e.preventDefault(); goTo(current + 1);
+    } else if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
+      e.preventDefault(); goTo(current - 1);
+    }
+  });
+
+  // Mouse wheel — fires immediately on first tick, locks 200ms to prevent multi-jump
+  let wheelLocked = false;
+  document.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if (wheelLocked) return;
+    wheelLocked = true;
+    e.deltaY > 0 ? goTo(current + 1) : goTo(current - 1);
+    setTimeout(() => { wheelLocked = false; }, 200);
+  }, { passive: false });
+
+  // Touch / swipe support
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = touchStartX - e.changedTouches[0].clientX;
+    const dy = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      dx > 0 ? goTo(current + 1) : goTo(current - 1);
+    }
+  }, { passive: true });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>

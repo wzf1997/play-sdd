@@ -1,0 +1,25 @@
+{
+  "name": "@paly-sdd/service",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --loader ts-node/esm src/server.ts",
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "fastify": "^4.27.0",
+    "better-sqlite3": "^9.6.0",
+    "@paly-sdd/game-core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "vitest": "^1.5.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3", "esbuild"]
+  }
+}

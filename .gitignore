@@ -1,0 +1,22 @@
+# Worktrees
+.worktrees/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment
+.env
+.env.local
+
+# SQLite
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# OS
+.DS_Store

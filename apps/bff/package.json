@@ -1,0 +1,21 @@
+{
+  "name": "@paly-sdd/bff",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --loader ts-node/esm src/server.ts",
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "fastify": "^4.27.0",
+    "@fastify/rate-limit": "^9.1.0",
+    "undici": "^6.13.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "vitest": "^1.5.0"
+  }
+}

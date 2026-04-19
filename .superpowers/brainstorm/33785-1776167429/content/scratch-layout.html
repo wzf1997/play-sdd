@@ -1,0 +1,47 @@
+<h2>刮卡交互区域</h2>
+<p class="subtitle">9 张卡铺开后，用户怎么刮？</p>
+
+<div class="cards" style="margin-top:20px;">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#0f172a;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+        <div style="background:#334155;border-radius:6px;height:44px;border:2px solid #475569;"></div>
+        <div style="background:#334155;border-radius:6px;height:44px;border:2px solid #475569;"></div>
+        <div style="background:#334155;border-radius:6px;height:44px;border:2px solid #475569;"></div>
+        <div style="background:#334155;border-radius:6px;height:44px;border:2px solid #475569;"></div>
+        <div style="background:#6366f1;border-radius:6px;height:44px;border:2px solid #818cf8;position:relative;">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#a5b4fc;font-size:11px;">✏️ 刮</div>
+        </div>
+        <div style="background:#334155;border-radius:6px;height:44px;border:2px solid #475569;"></div>
+        <div style="background:#334155;border-radius:6px;height:44px;border:2px solid #475569;"></div>
+        <div style="background:#334155;border-radius:6px;height:44px;border:2px solid #475569;"></div>
+        <div style="background:#334155;border-radius:6px;height:44px;border:2px solid #475569;"></div>
+      </div>
+      <div style="text-align:center;margin-top:8px;color:#64748b;font-size:11px;">点击选中一张 → 在格子内刮</div>
+    </div>
+    <div class="card-body">
+      <h3>A. 先选后刮（推荐）</h3>
+      <p>用户先点击选中某张卡片（高亮），然后在该格子上手刮。符合 PRD 描述：「任选一张刮刮卡刮开」。</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px;background:#0f172a;">
+      <div style="display:flex;justify-content:center;align-items:center;height:80px;">
+        <div style="background:#6366f1;border-radius:10px;width:80px;height:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;border:2px solid #818cf8;">
+          <div style="color:#a5b4fc;font-size:22px;">🎁</div>
+          <div style="color:#c7d2fe;font-size:10px;">放大刮</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:4px;color:#64748b;font-size:11px;">选中后全屏放大该卡片</div>
+    </div>
+    <div class="card-body">
+      <h3>B. 选中后放大刮</h3>
+      <p>点击选一张后，该卡片动画放大到屏幕中央（其余缩小/模糊），在放大版本上刮。操作更精准，移动端体验好。</p>
+    </div>
+  </div>
+
+</div>

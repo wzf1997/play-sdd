@@ -1,0 +1,77 @@
+<h2>ScratchCard 插件架构总览</h2>
+<p class="subtitle">遵循现有 Grid9 / BlindBox 插件模式</p>
+
+<div style="display:flex;flex-direction:column;gap:16px;margin-top:16px;">
+
+  <!-- Layer 1: Web -->
+  <div style="background:#1e293b;border-radius:10px;padding:16px;border:1px solid #334155;">
+    <div style="color:#6366f1;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Web Layer — apps/web/src/games/ScratchCard/</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;">
+        <div style="color:#38bdf8;font-size:12px;font-weight:600;">ScratchCardGame.tsx</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">主组件，状态机协调者</div>
+      </div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;">
+        <div style="color:#38bdf8;font-size:12px;font-weight:600;">ScratchCanvas.tsx</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">Canvas 刮涂组件，独立封装</div>
+      </div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;">
+        <div style="color:#38bdf8;font-size:12px;font-weight:600;">WinModal.tsx</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">中奖弹窗 + 24h 倒计时</div>
+      </div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;">
+        <div style="color:#38bdf8;font-size:12px;font-weight:600;">useScratchCardGame.ts</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">状态机 + BFF 调用</div>
+      </div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;">
+        <div style="color:#38bdf8;font-size:12px;font-weight:600;">useCardPhysics.ts</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">rAF 物理引擎，每帧更新卡片位置</div>
+      </div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #1e3a5f;">
+        <div style="color:#38bdf8;font-size:12px;font-weight:600;">index.ts</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">插件注册 (registerGame)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrow -->
+  <div style="text-align:center;color:#475569;font-size:20px;">↕ /api/game/scratch-card/init · play · result</div>
+
+  <!-- Layer 2: BFF -->
+  <div style="background:#1e293b;border-radius:10px;padding:16px;border:1px solid #334155;">
+    <div style="color:#10b981;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">BFF Layer — apps/bff/src/routes/games/scratch-card/</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #14532d;">
+        <div style="color:#4ade80;font-size:12px;font-weight:600;">init.ts</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">生成 session，从 service 取奖品配置</div>
+      </div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #14532d;">
+        <div style="color:#4ade80;font-size:12px;font-weight:600;">play.ts</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">校验选中卡片，返回奖品</div>
+      </div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #14532d;">
+        <div style="color:#4ade80;font-size:12px;font-weight:600;">result.ts</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">查询最终结果 + 倒计时状态</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrow -->
+  <div style="text-align:center;color:#475569;font-size:20px;">↕ HTTP</div>
+
+  <!-- Layer 3: Service -->
+  <div style="background:#1e293b;border-radius:10px;padding:16px;border:1px solid #334155;">
+    <div style="color:#f59e0b;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Service Layer — apps/service/src/games/scratch-card/</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #451a03;">
+        <div style="color:#fbbf24;font-size:12px;font-weight:600;">scratch-card.ts</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">业务逻辑：奖品池、防重刷</div>
+      </div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px;border:1px solid #451a03;">
+        <div style="color:#fbbf24;font-size:12px;font-weight:600;">SQLite</div>
+        <div style="color:#64748b;font-size:11px;margin-top:4px;">复用 campaigns / prizes 表，新增 scratch_sessions</div>
+      </div>
+    </div>
+  </div>
+
+</div>
